@@ -1,467 +1,139 @@
-// main.dart - Online Consultant Mobile App (Flutter)
-
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:get/get.dart';
+import 'routes/app_routes.dart';
+import 'routes/app_pages.dart';
 
 void main() {
   runApp(const OnlineConsultantApp());
 }
 
 class OnlineConsultantApp extends StatelessWidget {
-  const OnlineConsultantApp({Key? key}) : super(key: key);
+  const OnlineConsultantApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Online Consultant',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 141, 37, 37),
+        ),
         fontFamily: 'SF Pro Display',
       ),
-      home: const SplashScreen(),
+      initialRoute: AppRoutes.splash,
+      getPages: AppPages.pages,
     );
   }
 }
 
-// Splash Screen
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
 
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
+// // main.dart - Online Consultant Mobile App (Flutter)
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+// import 'package:flutter/material.dart';
+// import 'dart:async';
+// import 'views/auth/login.dart';
 
-  @override
-  void initState() {
-    super.initState();
+// void main() {
+//   runApp(const OnlineConsultantApp());
+// }
 
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
+// class OnlineConsultantApp extends StatelessWidget {
+//   const OnlineConsultantApp({super.key});
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
-    _controller.forward();
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Online Consultant',
+//       debugShowCheckedModeBanner: false,
+//       theme: ThemeData(
+//         colorScheme: ColorScheme.fromSeed(
+//           seedColor: const Color.fromARGB(
+//             255,
+//             141,
+//             37,
+//             37,
+//           ), // ganti dengan HEX kamu
+//         ),
+//         fontFamily: 'SF Pro Display',
+//       ),
 
-    // Navigate to Login after 2.5 seconds
-    Timer(const Duration(milliseconds: 2500), () {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
-    });
-  }
+//       home: const SplashScreen(),
+//     );
+//   }
+// }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+// // Splash Screen
+// class SplashScreen extends StatefulWidget {
+//   const SplashScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5),
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Stethoscope Icon
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: const Icon(
-                  Icons.monitor_heart_outlined,
-                  size: 80,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Hallo',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   State<SplashScreen> createState() => _SplashScreenState();
+// }
 
-// Login Screen
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+// class _SplashScreenState extends State<SplashScreen>
+//     with SingleTickerProviderStateMixin {
+//   late AnimationController _controller;
+//   late Animation<double> _fadeAnimation;
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
+//   @override
+//   void initState() {
+//     super.initState();
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _rememberMe = false;
+//     _controller = AnimationController(
+//       duration: const Duration(milliseconds: 1000),
+//       vsync: this,
+//     );
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+//     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
+//     _controller.forward();
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement login logic
-      print('Email: ${_emailController.text}');
-      print('Password: ${_passwordController.text}');
-      print('Remember Me: $_rememberMe');
+//     // Navigate to Login after 2.5 seconds
+//     Timer(const Duration(milliseconds: 2500), () {
+//       Navigator.of(
+//         context,
+//       ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+//     });
+//   }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Login functionality - Connect to your backend API'),
-          backgroundColor: Color(0xFF4F46E5),
-        ),
-      );
-    }
-  }
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
 
-  void _handleRegister() {
-    // TODO: Navigate to Register screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Navigate to Register Screen'),
-        backgroundColor: Color(0xFF4F46E5),
-      ),
-    );
-  }
-
-  void _handleForgotPassword() {
-    // TODO: Navigate to Forgot Password screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Navigate to Forgot Password Screen'),
-        backgroundColor: Color(0xFF4F46E5),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header with Stethoscope Icon
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: const Icon(
-                Icons.monitor_heart_outlined,
-                size: 70,
-                color: Colors.white,
-              ),
-            ),
-
-            // Login Form Card
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Subtitle
-                        const Text(
-                          'Please Login to Online Consultant',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF9CA3AF),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Email Input
-                        const Text(
-                          'Email*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Placeholder',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFF9CA3AF),
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: Color(0xFF4F46E5),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF4F46E5),
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Please enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Password Input
-                        const Text(
-                          'Password*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFF9CA3AF),
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.lock_outline,
-                              color: Color(0xFF4F46E5),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: const Color(0xFF9CA3AF),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE5E7EB),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF4F46E5),
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Remember Me & Forgot Password
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Remember Me Checkbox
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Checkbox(
-                                    value: _rememberMe,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _rememberMe = value ?? false;
-                                      });
-                                    },
-                                    activeColor: const Color(0xFF4F46E5),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Remember Me',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF4F46E5),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Forgot Password
-                            TextButton(
-                              onPressed: _handleForgotPassword,
-                              child: const Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF4F46E5),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Login Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4F46E5),
-                              foregroundColor: Colors.white,
-                              elevation: 8,
-                              shadowColor: const Color(
-                                0xFF4F46E5,
-                              ).withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Register Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Don't Have an account? ",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF111827),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _handleRegister,
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'Register Here',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF4F46E5),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: const Color(0xFF4F46E5),
+//       body: Center(
+//         child: FadeTransition(
+//           opacity: _fadeAnimation,
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               // Stethoscope Icon
+//               Container(
+//                 padding: const EdgeInsets.all(20),
+//                 child: const Icon(
+//                   Icons.monitor_heart_outlined,
+//                   size: 80,
+//                   color: Colors.white,
+//                 ),
+//               ),
+//               const SizedBox(height: 20),
+//               const Text(
+//                 'Hallo',
+//                 style: TextStyle(
+//                   fontSize: 36,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.white,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
