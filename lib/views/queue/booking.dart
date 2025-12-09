@@ -1,400 +1,397 @@
-// File: lib/views/queue/queue_booking_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart'; 
+import '../../routes/app_routes.dart';
 
-class QueueBookingScreen extends StatefulWidget {
-  const QueueBookingScreen({Key? key}) : super(key: key);
-
-  @override
-  State<QueueBookingScreen> createState() => _QueueBookingScreenState();
-}
-
-class _QueueBookingScreenState extends State<QueueBookingScreen> {
-  final TextEditingController _timeController = TextEditingController();
-  final TextEditingController _complainController = TextEditingController();
-  
-  String _selectedMonth = 'Sep';
-  int _selectedDay = 12;
-  
-  final List<String> _months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
-  final List<Map<String, dynamic>> _days = [
-    {'day': 'Tue', 'date': 12},
-    {'day': 'Wed', 'date': 13},
-    {'day': 'Thu', 'date': 14},
-    {'day': 'Fri', 'date': 15},
-    {'day': 'Sat', 'date': 11},
+// --- 1. CONTROLLER (State Management) ---
+class BookingController extends GetxController {
+  // Data Dokter Dummy
+  final List<String> doctors = [
+    "Dr. Stone",
+    "Dr. Chopper",
+    "Dr. Strange",
+    "Dr. House"
   ];
 
-  @override
-  void dispose() {
-    _timeController.dispose();
-    _complainController.dispose();
-    super.dispose();
+  // Variables (Observables)
+  var selectedDoctor = Rxn<String>(); 
+  var selectedDate = DateTime.now().obs;
+  var selectedTime = Rxn<TimeOfDay>();
+  
+  // Controller untuk Text Input
+  final TextEditingController complaintController = TextEditingController();
+
+  // Fungsi Pilih Tanggal Lewat Bubble/List Horizontal
+  void selectDate(DateTime date) {
+    selectedDate.value = date;
   }
 
-  void _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
+  // Fungsi Pilih Tanggal Lewat Dialog (Seperti Time Picker)
+  Future<void> pickDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate.value,
+      firstDate: DateTime.now(), // Tidak boleh pilih tanggal lampau
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != selectedDate.value) {
+      selectedDate.value = picked;
+    }
+  }
+
+  // Fungsi Pilih Jam
+  Future<void> pickTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    
-    if (pickedTime != null) {
-      setState(() {
-        _timeController.text = pickedTime.format(context);
-      });
+    if (picked != null) {
+      selectedTime.value = picked;
     }
   }
 
-  void _submitBooking() {
-    if (_timeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select time'),
-          backgroundColor: Colors.red,
-        ),
+  // --- FUNGSI SUBMIT (UPDATED) ---
+  void submitBooking() {
+    // 1. Validasi: Pastikan data sudah terisi
+    if (selectedDoctor.value == null || selectedTime.value == null) {
+      Get.snackbar(
+        "Data Belum Lengkap", 
+        "Mohon pilih dokter dan waktu layanan",
+        backgroundColor: Colors.redAccent, 
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(20),
       );
       return;
     }
-    
-    // TODO: Implement booking logic
-    print('Month: $_selectedMonth');
-    print('Day: $_selectedDay');
-    print('Time: ${_timeController.text}');
-    print('Complaint: ${_complainController.text}');
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Booking submitted successfully!'),
-        backgroundColor: Color(0xFF4F46E5),
-      ),
+
+    // 2. KIRIM DATA (Passing Arguments)
+    // Ini adalah simulasi pengiriman data tanpa database
+    Get.toNamed(
+      AppRoutes.antrian, 
+      arguments: {
+        'doctorName': selectedDoctor.value, // Mengirim nama dokter yang dipilih
+        'poliName': 'Spesialis Telinga, Hidung, Tenggorokan', // Static atau bisa dibuat dinamis
+        'date': selectedDate.value, // Mengirim tanggal yang dipilih
+        'time': selectedTime.value, // Mengirim jam yang dipilih
+      }
     );
   }
+  
+  @override
+  void onClose() {
+    complaintController.dispose();
+    super.onClose();
+  }
+}
+
+// --- 2. VIEW (UI Screen) ---
+class QueueBookingScreen extends StatelessWidget {
+  final String poliName;
+  final String poliDescription;
+
+  const QueueBookingScreen({
+    super.key,
+    this.poliName = '',
+    this.poliDescription = '',
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Inisialisasi Controller
+    final controller = Get.put(BookingController());
+
+    // Warna dari Desain
+    const Color primaryBlue = Color(0xFF3F51B5);
+    const Color inputBg = Color(0xFFE8EAF6);
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4F46E5),
-        elevation: 0,
+        backgroundColor: primaryBlue,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          onPressed: () => Get.back(),
         ),
         title: const Text(
-          'Daftar Antrian Baru',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          "Daftar Antrian Baru",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
         ),
         centerTitle: true,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            
-            // Doctor Card
+            // --- DROPDOWN DOKTER ---
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFE0E7FF),
+                color: const Color(0xFFE0E3F3), 
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                children: [
-                  // Doctor Avatar
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        'https://via.placeholder.com/50',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.person,
-                            size: 30,
-                            color: Color(0xFF4F46E5),
-                          );
-                        },
+              child: Obx(() => DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  hint: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.person, color: Colors.white),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text("Pilih Dokter", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text("Spesialis...", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  
-                  // Doctor Info
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dr. Stone',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF111827),
+                  value: controller.selectedDoctor.value,
+                  items: controller.doctors.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 18,
+                            backgroundImage: const NetworkImage("https://i.pravatar.cc/150?img=11"), 
+                            backgroundColor: Colors.grey[300],
                           ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Spesialis Telinga, Hidung, Tenggorokan',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF6B7280),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const Text("Spesialis THT", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    controller.selectedDoctor.value = val;
+                  },
+                ),
+              )),
             ),
-            const SizedBox(height: 24),
             
-            // Calendar Card
+            const SizedBox(height: 24),
+
+            // --- CUSTOM CALENDAR WIDGET ---
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF08A),
+                color: const Color(0xFFEBC115), // Warna Kuning sesuai gambar
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
-                  // Month Row & Calendar Icon
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        '- -',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF6B7280),
-                        ),
+                  // 1. Header Kalender (INTERAKTIF: Klik untuk buka DatePicker)
+                  InkWell(
+                    onTap: () => controller.pickDate(context), // Memanggil Dialog Kalender
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD6D7F6), // Ungu pudar
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.calendar_today,
-                          size: 20,
-                          color: Color(0xFF4B5563),
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Obx(() => Text(
+                            DateFormat('dd MMMM yyyy').format(controller.selectedDate.value),
+                            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                          )),
+                          const Icon(Icons.calendar_month, size: 20, color: Colors.black87),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
                   
-                  // Month Selector
-                  SizedBox(
-                    height: 30,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _months.length,
-                      itemBuilder: (context, index) {
-                        final month = _months[index];
-                        final isSelected = month == _selectedMonth;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedMonth = month;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            alignment: Alignment.center,
+                  const SizedBox(height: 16),
+
+                  // 2. Bulan (Dinamis sesuai selectedDate)
+                  // Kita menampilkan daftar bulan statis, tapi menyorot bulan yang dipilih
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                      ].map((month) {
+                        return Obx(() {
+                          // Cek apakah bulan ini sama dengan bulan di selectedDate
+                          bool isSelectedMonth = DateFormat('MMM').format(controller.selectedDate.value) == month;
+                          
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Text(
                               month,
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? const Color(0xFF111827) : const Color(0xFF6B7280),
-                                decoration: isSelected ? TextDecoration.underline : null,
+                                fontWeight: isSelectedMonth ? FontWeight.bold : FontWeight.w500,
+                                decoration: isSelectedMonth ? TextDecoration.underline : TextDecoration.none,
                                 decorationThickness: 2,
+                                color: Colors.black87,
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        });
+                      }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 16),
                   
-                  // Days Selector
+                  const Divider(color: Colors.black26),
+                  const SizedBox(height: 10),
+
+                  // 3. List Tanggal Horizontal (INTERAKTIF)
+                  // List ini akan menampilkan tanggal mulai dari 'selectedDate' ke depan
                   SizedBox(
-                    height: 90,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _days.length,
-                      itemBuilder: (context, index) {
-                        final day = _days[index];
-                        final isSelected = day['date'] == _selectedDay;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedDay = day['date'];
-                            });
-                          },
-                          child: Container(
-                            width: 70,
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.black : Colors.white,
-                              borderRadius: BorderRadius.circular(35),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  day['day'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: isSelected ? Colors.white : const Color(0xFF111827),
+                    height: 80,
+                    child: Obx(() {
+                      // Base date untuk list view adalah tanggal yang dipilih user
+                      DateTime baseDate = controller.selectedDate.value;
+                      
+                      return ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 14, // Menampilkan 2 minggu ke depan dari tanggal terpilih
+                        separatorBuilder: (ctx, i) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          // Logic: List dimulai dari tanggal terpilih (index 0)
+                          final date = baseDate.add(Duration(days: index));
+                          
+                          // Cek apakah tanggal ini adalah tanggal yang dipilih (Pasti index 0 true, tapi ini untuk visual saat digeser logic lain)
+                          final isSelected = index == 0; 
+                          
+                          return InkWell(
+                            onTap: () {
+                              // Saat diklik, update tanggal terpilih di controller
+                              // Ini akan membuat list me-render ulang dimulai dari tanggal yang baru diklik
+                              controller.selectDate(date);
+                            },
+                            child: Container(
+                              width: 55,
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.black : Colors.white,
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    DateFormat('E').format(date), // Nama Hari (Tue, Wed)
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.black,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${day['date']}',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.white : const Color(0xFF111827),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    DateFormat('d').format(date), // Tanggal (12, 13)
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      );
+                    }),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
-            
-            // Time Input
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Time*',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF111827),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _timeController,
-                    readOnly: true,
-                    onTap: _selectTime,
-                    decoration: InputDecoration(
-                      hintText: '- -',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      suffixIcon: const Icon(
-                        Icons.access_time,
-                        color: Color(0xFF6B7280),
+
+            // --- TIME PICKER ---
+            const Text("Time*", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => controller.pickTime(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  color: inputBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Obx(() => Text(
+                      controller.selectedTime.value?.format(context) ?? "--:--",
+                      style: TextStyle(
+                        color: controller.selectedTime.value == null ? Colors.grey : Colors.black,
                       ),
-                      filled: true,
-                      fillColor: const Color(0xFFE0E7FF),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Complaint Input
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'What do you feel',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF111827),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _complainController,
-                    maxLines: 5,
-                    maxLength: 100,
-                    decoration: InputDecoration(
-                      hintText: 'Text Here',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      filled: true,
-                      fillColor: const Color(0xFFE0E7FF),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.all(16),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Submit Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _submitBooking,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                    )),
+                    const Icon(Icons.access_time, color: Colors.black54),
+                  ],
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // --- COMPLAINT INPUT ---
+            const Text("What do you feel", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: inputBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: controller.complaintController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  hintText: "Text Here",
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(16),
+                ),
+              ),
+            ),
+            
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: EdgeInsets.only(top: 4.0),
+                child: Text("0/100", style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // --- SUBMIT BUTTON ---
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () => controller.submitBooking(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF254EDB),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "Submit",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ),
           ],
         ),
       ),

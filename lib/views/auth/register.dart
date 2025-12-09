@@ -1,11 +1,9 @@
-// File: lib/views/auth/register.dart
-
 import 'package:flutter/material.dart';
-import 'package:i_locket/views/auth/login.dart';
-import 'package:i_locket/views/home/home_screen.dart'; // pastikan path HomeScreen benar
+import 'package:get/get.dart';
+import '../../routes/app_routes.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -13,15 +11,18 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  // State Variables
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
-  String _selectedCountryCode = '+62';
+  final String _selectedCountryCode = '+62';
 
   @override
   void dispose() {
@@ -33,54 +34,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // ==============================
-  //  HANDLE REGISTER
-  // ==============================
+  // --- LOGIKA REGISTER ---
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
-      print('Full Name: ${_fullNameController.text}');
-      print('Email: ${_emailController.text}');
-      print('Password: ${_passwordController.text}');
-      print('Phone: $_selectedCountryCode${_phoneController.text}');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful!'),
-          backgroundColor: Color(0xFF4F46E5),
-        ),
+      // 1. Tampilkan Snackbar Sukses
+      Get.snackbar(
+        "Berhasil",
+        "Akun berhasil dibuat! Silakan login.",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        icon: const Icon(Icons.check_circle, color: Colors.white),
+        margin: const EdgeInsets.all(10),
+        borderRadius: 10,
+        duration: const Duration(seconds: 2),
       );
 
-      // Navigasi setelah delay
+      // 2. Navigasi ke Login atau Home
       Future.delayed(const Duration(milliseconds: 1500), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
+        // Biasanya setelah register sukses, user diarahkan login atau langsung home
+        // Disini kita arahkan ke Home agar flow-nya lancar
+        Get.offAllNamed(AppRoutes.home_screen);
       });
+    } else {
+      Get.snackbar(
+        "Gagal",
+        "Mohon lengkapi formulir dengan benar",
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        icon: const Icon(Icons.error, color: Colors.white),
+        margin: const EdgeInsets.all(10),
+        borderRadius: 10,
+      );
     }
   }
 
-  // ==============================
-  //  BACK TO LOGIN
-  // ==============================
+  // --- NAVIGASI KE LOGIN ---
   void _navigateToLogin() {
-    Navigator.pop(context);
+    Get.back(); // Kembali ke halaman Login
   }
 
   @override
   Widget build(BuildContext context) {
+    // Definisi Warna Konsisten
+    const Color primaryBlue = Color(0xFF3F51B5);
+    const Color textDark = Color(0xFF1F2937);
+    const Color textGrey = Color(0xFF6B7280);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5),
+      backgroundColor: primaryBlue,
       body: SafeArea(
+        bottom: false, // Agar container putih mentok ke bawah
         child: Column(
           children: [
-            const SizedBox(height: 60),
-
-            // Registration Form Card
+            // Header Space (Biru di atas)
+            const SizedBox(height: 40),
+            
+            // Container Putih
             Expanded(
               child: Container(
+                width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -88,7 +102,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     topRight: Radius.circular(30),
                   ),
                 ),
-
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Form(
@@ -96,14 +109,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
                         // Title
                         const Text(
                           'Register',
                           style: TextStyle(
-                            fontSize: 36,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF111827),
+                            color: textDark,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -112,77 +125,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const Text(
                           'Please Register Before Login',
                           style: TextStyle(
-                            fontSize: 16,
-                            color: Color(0xFF9CA3AF),
+                            fontSize: 14,
+                            color: textGrey,
+                            fontFamily: 'Poppins',
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 30),
 
                         // ==============================
                         // FULL NAME
                         // ==============================
-                        const Text(
-                          'Full Name*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
+                        const Text('Full Name*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _fullNameController,
-                          decoration: InputDecoration(
-                            hintText: 'Fullname',
-                            filled: true,
-                            fillColor: const Color(0xFFF3F4F6),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) =>
-                              (value == null || value.isEmpty)
-                                  ? 'Please enter your full name'
-                                  : null,
+                          decoration: _buildInputDecoration("Fullname", null),
+                          validator: (val) => (val == null || val.isEmpty) ? 'Wajib diisi' : null,
                         ),
                         const SizedBox(height: 20),
 
                         // ==============================
                         // EMAIL
                         // ==============================
-                        const Text(
-                          'Email*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
+                        const Text('Email*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            hintText: 'Email',
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: Color(0xFF4F46E5),
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFFF3F4F6),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Please enter a valid email';
-                            }
+                          decoration: _buildInputDecoration("Placeholder", Icons.email_outlined, iconColor: primaryBlue),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) return 'Wajib diisi';
+                            if (!val.contains('@')) return 'Email tidak valid';
                             return null;
                           },
                         ),
@@ -191,162 +164,100 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         // ==============================
                         // PASSWORD
                         // ==============================
-                        const Text(
-                          'Password*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
+                        const Text('Password*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            hintText: 'Password',
-                            prefixIcon: const Icon(
-                              Icons.lock_outline,
-                              color: Color(0xFF4F46E5),
-                            ),
+                          decoration: _buildInputDecoration(
+                            "Password", 
+                            Icons.lock_outline, 
+                            iconColor: primaryBlue,
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFFF3F4F6),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
+                          validator: (val) => (val != null && val.length < 6) ? 'Minimal 6 karakter' : null,
                         ),
                         const SizedBox(height: 20),
 
                         // ==============================
                         // REPEAT PASSWORD
                         // ==============================
-                        const Text(
-                          'Repeat Password*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
+                        const Text('Repeat Password*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _repeatPasswordController,
                           obscureText: _obscureRepeatPassword,
-                          decoration: InputDecoration(
-                            hintText: 'Repeat Password',
-                            prefixIcon: const Icon(
-                              Icons.lock_outline,
-                              color: Color(0xFF4F46E5),
-                            ),
+                          decoration: _buildInputDecoration(
+                            "Repeat Password", 
+                            Icons.lock_outline, 
+                            iconColor: primaryBlue,
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureRepeatPassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureRepeatPassword =
-                                      !_obscureRepeatPassword;
-                                });
-                              },
-                            ),
-                            filled: true,
-                            fillColor: const Color(0xFFF3F4F6),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              icon: Icon(_obscureRepeatPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                              onPressed: () => setState(() => _obscureRepeatPassword = !_obscureRepeatPassword),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please repeat your password';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'Passwords do not match';
-                            }
+                          validator: (val) {
+                            if (val != _passwordController.text) return 'Password tidak sama';
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
 
                         // ==============================
-                        // PHONE
+                        // PHONE INPUT (Custom Style)
                         // ==============================
-                        const Text(
-                          'Phone Input*',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
+                        const Text('Phone Input*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
                             hintText: 'Input Phone Number',
+                            hintStyle: const TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
+                            filled: true,
+                            fillColor: Colors.white,
+                            // Custom Prefix untuk Bendera & Kode Negara
                             prefixIcon: Container(
-                              padding: const EdgeInsets.only(left: 16, right: 8),
+                              width: 100, // Lebar area prefix
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Bendera Dummy (Merah Putih - Indonesia)
                                   Container(
                                     width: 24,
                                     height: 16,
                                     decoration: BoxDecoration(
                                       color: Colors.red,
                                       borderRadius: BorderRadius.circular(2),
+                                      border: Border.all(color: Colors.grey.shade300)
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _selectedCountryCode,
-                                    style: const TextStyle(
-                                      color: Color(0xFF111827),
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
                                   ),
-                                  const Icon(Icons.arrow_drop_down),
+                                  const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
                                 ],
                               ),
                             ),
-                            filled: true,
-                            fillColor: const Color(0xFFF3F4F6),
-                            border: OutlineInputBorder(
+                            enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              borderSide: BorderSide(color: Colors.grey.shade300),
                             ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: primaryBlue, width: 2),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          validator: (value) =>
-                              (value == null || value.isEmpty)
-                                  ? 'Please enter your phone number'
-                                  : null,
+                          validator: (val) => (val == null || val.isEmpty) ? 'Wajib diisi' : null,
                         ),
+                        
                         const SizedBox(height: 32),
 
                         // ==============================
@@ -354,12 +265,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         // ==============================
                         SizedBox(
                           width: double.infinity,
-                          height: 56,
+                          height: 52,
                           child: ElevatedButton(
                             onPressed: _handleRegister,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4F46E5),
+                              backgroundColor: primaryBlue,
                               foregroundColor: Colors.white,
+                              elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -367,8 +279,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: const Text(
                               'Register',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                fontFamily: 'Poppins',
                               ),
                             ),
                           ),
@@ -381,26 +294,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'Have an account? ',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF111827),
-                              ),
+                            Text(
+                              "Have an account? ",
+                              style: TextStyle(fontSize: 14, color: textDark, fontFamily: 'Poppins'),
                             ),
-                            TextButton(
-                              onPressed: _navigateToLogin,
+                            GestureDetector(
+                              onTap: _navigateToLogin,
                               child: const Text(
                                 'Login Here',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF4F46E5),
+                                  color: primaryBlue,
+                                  fontFamily: 'Poppins',
                                 ),
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -409,6 +321,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper Widget untuk Style Input Field agar Rapi & Konsisten
+  InputDecoration _buildInputDecoration(String hint, IconData? icon, {Color? iconColor, Widget? suffixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
+      prefixIcon: icon != null ? Icon(icon, color: iconColor ?? Colors.grey) : null,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF3F51B5), width: 2), // Primary Blue
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
     );
   }
