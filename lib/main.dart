@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'routes/app_routes.dart';
 import 'routes/app_pages.dart';
+import './services/supabase_service.dart';
 
-void main() {
+void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Get.putAsync(() => SupabaseService().init());
+    print('✅ Supabase berhasil diinisialisasi');
+  } catch (e) {
+    print('❌ Supabase gagal diinisialisasi');
+    print('Error: $e');
+  }
+
   runApp(const OnlineConsultantApp());
+  
 }
 
 class OnlineConsultantApp extends StatelessWidget {

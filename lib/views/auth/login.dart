@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../routes/app_routes.dart';
+import '../../services/testing_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,11 +12,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
+  final TestingService _testingService = TestingService();
+
   // State
   bool _obscurePassword = true;
   bool _rememberMe = false;
@@ -28,7 +31,18 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // --- LOGIKA LOGIN ---
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
+    // 🔹 PANGGIL SERVICE SUPABASE
+    try {
+      final data = await _testingService.getAllTesting();
+      print('📦 Data dari tabel testing:');
+      print(data);
+    } catch (e) {
+      print('❌ Error ambil data testing');
+      print(e);
+    }
+
+    
     if (_formKey.currentState!.validate()) {
       // 1. Tampilkan Snackbar Sukses
       Get.snackbar(
@@ -74,12 +88,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     // Warna Biru Utama (Sesuai Splash Screen & Desain)
-    const Color primaryBlue = Color(0xFF3F51B5); 
+    const Color primaryBlue = Color(0xFF3F51B5);
     const Color textDark = Color(0xFF1F2937);
     const Color textGrey = Color(0xFF6B7280);
 
     return Scaffold(
-      backgroundColor: primaryBlue, 
+      backgroundColor: primaryBlue,
       body: Stack(
         children: [
           // 1. LOGO DI TENGAH ATAS (Sesuai Desain)
@@ -87,11 +101,13 @@ class _LoginScreenState extends State<LoginScreen> {
             top: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.35, // 35% layar untuk area biru
+            height:
+                MediaQuery.of(context).size.height *
+                0.35, // 35% layar untuk area biru
             child: Center(
               child: Image.asset(
                 'assets/logo.png', // Pastikan file Frame 46.png sudah direname jadi logo.png
-                width: 80, 
+                width: 80,
                 height: 80,
                 // color: Colors.white, // Hapus komentar ini jika gambar aslinya hitam
               ),
@@ -102,7 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.70, // 70% layar untuk form
+              height:
+                  MediaQuery.of(context).size.height *
+                  0.70, // 70% layar untuk form
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -158,10 +176,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           hintText: 'Placeholder',
-                          hintStyle: const TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
-                          prefixIcon: const Icon(Icons.email_outlined, color: primaryBlue),
+                          hintStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontFamily: 'Poppins',
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: primaryBlue,
+                          ),
                           filled: true,
-                          fillColor: Colors.white, // Background putih sesuai gambar
+                          fillColor:
+                              Colors.white, // Background putih sesuai gambar
                           // Border default (abu-abu tipis)
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -170,16 +195,24 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Border saat diklik (biru)
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: primaryBlue, width: 2),
+                            borderSide: const BorderSide(
+                              color: primaryBlue,
+                              width: 2,
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Please enter your email';
-                          if (!value.contains('@')) return 'Please enter a valid email';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter your email';
+                          if (!value.contains('@'))
+                            return 'Please enter a valid email';
                           return null;
                         },
                       ),
@@ -203,11 +236,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           hintText: 'Password',
-                          hintStyle: const TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
-                          prefixIcon: const Icon(Icons.lock_outline, color: primaryBlue),
+                          hintStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontFamily: 'Poppins',
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: primaryBlue,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
                               color: Colors.grey,
                             ),
                             onPressed: () {
@@ -224,15 +265,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: primaryBlue, width: 2),
+                            borderSide: const BorderSide(
+                              color: primaryBlue,
+                              width: 2,
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Please enter your password';
+                          if (value == null || value.isEmpty)
+                            return 'Please enter your password';
                           return null;
                         },
                       ),
@@ -257,7 +305,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     });
                                   },
                                   activeColor: primaryBlue,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),

@@ -1,42 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart'; // Pastikan import ini ada
 import '../../routes/app_routes.dart';
 
 // --- 1. CONTROLLER (State Management) ---
 class BookingController extends GetxController {
-  // Data Dokter Dummy
-  final List<String> doctors = [
-    "Dr. Stone",
-    "Dr. Chopper",
-    "Dr. Strange",
-    "Dr. House"
-  ];
+  // Client Supabase
+  final supabase = Supabase.instance.client; 
 
   // Variables (Observables)
-  var selectedDoctor = Rxn<String>(); 
+  // List Dokter sekarang menampung Map (Object data dokter lengkap dari DB)
+  var doctors = <Map<String, dynamic>>[].obs;
+  var isLoadingDoctors = true.obs;
+
+  // Selected Doctor menyimpan object dokter yang dipilih
+  var selectedDoctor = Rxn<Map<String, dynamic>>(); 
+  
   var selectedDate = DateTime.now().obs;
   var selectedTime = Rxn<TimeOfDay>();
   
   // Controller untuk Text Input
   final TextEditingController complaintController = TextEditingController();
 
-  // Fungsi Pilih Tanggal Lewat Bubble/List Horizontal
-  void selectDate(DateTime date) {
-    selectedDate.value = date;
+  @override
+  void onInit() {
+    super.onInit();
+    fetchDoctors(); // Ambil data dokter saat halaman dibuka
   }
 
-  // Fungsi Pilih Tanggal Lewat Dialog (Seperti Time Picker)
+  // --- FUNGSI AMBIL DATA DOKTER (SUPABASE) ---
+  Future<void> fetchDoctors() async {
+    try {
+      isLoadingDoctors.value = true;
+      // Select semua kolom dari tabel 'doctors'
+      final response = await supabase.from('doctors').select();
+      
+      // Masukkan hasil ke list observable
+      doctors.value = List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      Get.snackbar("Error", "Gagal memuat data dokter: $e");
+    } finally {
+      isLoadingDoctors.value = false;
+    }
+  }
+
+  // Fungsi Pilih Tanggal Lewat Dialog
   Future<void> pickDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate.value,
-      firstDate: DateTime.now(), // Tidak boleh pilih tanggal lampau
+      firstDate: DateTime.now(), 
       lastDate: DateTime(2100),
     );
     if (picked != null && picked != selectedDate.value) {
       selectedDate.value = picked;
     }
+  }
+
+  // Fungsi Pilih Tanggal Lewat Bubble (List Horizontal)
+  void selectDate(DateTime date) {
+    selectedDate.value = date;
   }
 
   // Fungsi Pilih Jam
@@ -50,9 +74,9 @@ class BookingController extends GetxController {
     }
   }
 
-  // --- FUNGSI SUBMIT (UPDATED) ---
-  void submitBooking() {
-    // 1. Validasi: Pastikan data sudah terisi
+  // --- FUNGSI SUBMIT KE DATABASE ---
+  Future<void> submitBooking() async {
+    // 1. Validasi Input
     if (selectedDoctor.value == null || selectedTime.value == null) {
       Get.snackbar(
         "Data Belum Lengkap", 
@@ -65,17 +89,51 @@ class BookingController extends GetxController {
       return;
     }
 
-    // 2. KIRIM DATA (Passing Arguments)
-    // Ini adalah simulasi pengiriman data tanpa database
-    Get.toNamed(
-      AppRoutes.antrian, 
-      arguments: {
-        'doctorName': selectedDoctor.value, // Mengirim nama dokter yang dipilih
-        'poliName': 'Spesialis Telinga, Hidung, Tenggorokan', // Static atau bisa dibuat dinamis
-        'date': selectedDate.value, // Mengirim tanggal yang dipilih
-        'time': selectedTime.value, // Mengirim jam yang dipilih
-      }
-    );
+    try {
+      // 2. Tampilkan Loading (Opsional, bisa pakai Get.dialog loading)
+      // Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
+
+      // 3. Persiapkan Data untuk Database
+      // Format Tanggal (YYYY-MM-DD) dan Jam (HH:MM:SS) untuk PostgreSQL
+      String dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value);
+      String timeStr = "${selectedTime.value!.hour.toString().padLeft(2, '0')}:${selectedTime.value!.minute.toString().padLeft(2, '0')}:00";
+      
+      // Generate Nomor Antrian Dummy (Di real app bisa pakai logic sequence DB)
+      String queueCode = "A-${DateTime.now().second}${DateTime.now().millisecond}"; 
+
+      // 4. Insert ke Tabel 'queues'
+      await supabase.from('queues').insert({
+        'doctor_id': selectedDoctor.value!['id'], // Ambil ID dari object dokter yang dipilih
+        'patient_name': 'Johan (User)', // Nanti diganti user login session
+        'booking_date': dateStr,
+        'booking_time': timeStr,
+        'complaint': complaintController.text,
+        'queue_number': queueCode,
+      });
+
+      // Tutup loading jika ada
+      // if (Get.isDialogOpen == true) Get.back();
+
+      // 5. Navigasi ke Halaman Sukses dengan Data
+      Get.toNamed(
+        AppRoutes.antrian, 
+        arguments: {
+          'doctorName': selectedDoctor.value!['name'],
+          'poliName': selectedDoctor.value!['specialist'],
+          'date': selectedDate.value,
+          'time': selectedTime.value,
+        }
+      );
+
+    } catch (e) {
+      // if (Get.isDialogOpen == true) Get.back();
+      Get.snackbar(
+        "Gagal Booking", 
+        "Terjadi kesalahan: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
   
   @override
@@ -87,14 +145,7 @@ class BookingController extends GetxController {
 
 // --- 2. VIEW (UI Screen) ---
 class QueueBookingScreen extends StatelessWidget {
-  final String poliName;
-  final String poliDescription;
-
-  const QueueBookingScreen({
-    super.key,
-    this.poliName = '',
-    this.poliDescription = '',
-  });
+  const QueueBookingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -125,63 +176,83 @@ class QueueBookingScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- DROPDOWN DOKTER ---
+            // --- DROPDOWN DOKTER (DYNAMIC) ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFFE0E3F3), 
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Obx(() => DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  hint: Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text("Pilih Dokter", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text("Spesialis...", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        ],
-                      ),
-                    ],
+              child: Obx(() {
+                // Tampilkan Loading jika data belum siap
+                if (controller.isLoadingDoctors.value) {
+                  return const Center(child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+
+                return DropdownButtonHideUnderline(
+                  child: DropdownButton<Map<String, dynamic>>(
+                    isExpanded: true,
+                    hint: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.grey,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Text("Pilih Dokter", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            Text("Spesialis...", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    // Value harus cocok dengan salah satu item di list (object reference)
+                    value: controller.selectedDoctor.value,
+                    
+                    // Map list dokter dari Supabase ke DropdownMenuItem
+                    items: controller.doctors.map((doctor) {
+                      return DropdownMenuItem<Map<String, dynamic>>(
+                        value: doctor, // Menyimpan seluruh object dokter
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              // Ambil URL gambar dari DB, atau pakai placeholder jika null
+                              backgroundImage: NetworkImage(doctor['image_url'] ?? "https://i.pravatar.cc/150?img=11"), 
+                              backgroundColor: Colors.grey[300],
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  doctor['name'] ?? "Dokter", 
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)
+                                ),
+                                Text(
+                                  doctor['specialist'] ?? "Umum", 
+                                  style: const TextStyle(fontSize: 10, color: Colors.grey)
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      controller.selectedDoctor.value = val;
+                    },
                   ),
-                  value: controller.selectedDoctor.value,
-                  items: controller.doctors.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundImage: const NetworkImage("https://i.pravatar.cc/150?img=11"), 
-                            backgroundColor: Colors.grey[300],
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                              const Text("Spesialis THT", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    controller.selectedDoctor.value = val;
-                  },
-                ),
-              )),
+                );
+              }),
             ),
             
             const SizedBox(height: 24),
@@ -190,19 +261,19 @@ class QueueBookingScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFEBC115), // Warna Kuning sesuai gambar
+                color: const Color(0xFFEBC115), // Warna Kuning
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
                 children: [
-                  // 1. Header Kalender (INTERAKTIF: Klik untuk buka DatePicker)
+                  // 1. Header Kalender (INTERAKTIF)
                   InkWell(
-                    onTap: () => controller.pickDate(context), // Memanggil Dialog Kalender
+                    onTap: () => controller.pickDate(context),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD6D7F6), // Ungu pudar
+                        color: const Color(0xFFD6D7F6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -220,8 +291,7 @@ class QueueBookingScreen extends StatelessWidget {
                   
                   const SizedBox(height: 16),
 
-                  // 2. Bulan (Dinamis sesuai selectedDate)
-                  // Kita menampilkan daftar bulan statis, tapi menyorot bulan yang dipilih
+                  // 2. Bulan (Visualisasi Sederhana)
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -230,9 +300,7 @@ class QueueBookingScreen extends StatelessWidget {
                         "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
                       ].map((month) {
                         return Obx(() {
-                          // Cek apakah bulan ini sama dengan bulan di selectedDate
                           bool isSelectedMonth = DateFormat('MMM').format(controller.selectedDate.value) == month;
-                          
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Text(
@@ -254,30 +322,20 @@ class QueueBookingScreen extends StatelessWidget {
                   const SizedBox(height: 10),
 
                   // 3. List Tanggal Horizontal (INTERAKTIF)
-                  // List ini akan menampilkan tanggal mulai dari 'selectedDate' ke depan
                   SizedBox(
                     height: 80,
                     child: Obx(() {
-                      // Base date untuk list view adalah tanggal yang dipilih user
                       DateTime baseDate = controller.selectedDate.value;
-                      
                       return ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: 14, // Menampilkan 2 minggu ke depan dari tanggal terpilih
+                        itemCount: 14,
                         separatorBuilder: (ctx, i) => const SizedBox(width: 10),
                         itemBuilder: (context, index) {
-                          // Logic: List dimulai dari tanggal terpilih (index 0)
                           final date = baseDate.add(Duration(days: index));
-                          
-                          // Cek apakah tanggal ini adalah tanggal yang dipilih (Pasti index 0 true, tapi ini untuk visual saat digeser logic lain)
                           final isSelected = index == 0; 
                           
                           return InkWell(
-                            onTap: () {
-                              // Saat diklik, update tanggal terpilih di controller
-                              // Ini akan membuat list me-render ulang dimulai dari tanggal yang baru diklik
-                              controller.selectDate(date);
-                            },
+                            onTap: () => controller.selectDate(date),
                             child: Container(
                               width: 55,
                               decoration: BoxDecoration(
@@ -288,7 +346,7 @@ class QueueBookingScreen extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    DateFormat('E').format(date), // Nama Hari (Tue, Wed)
+                                    DateFormat('E').format(date),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white : Colors.black,
                                       fontSize: 12,
@@ -296,7 +354,7 @@ class QueueBookingScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    DateFormat('d').format(date), // Tanggal (12, 13)
+                                    DateFormat('d').format(date),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white : Colors.black,
                                       fontWeight: FontWeight.bold,
