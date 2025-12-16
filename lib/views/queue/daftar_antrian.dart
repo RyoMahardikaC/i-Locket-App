@@ -1,6 +1,5 @@
-// File: lib/views/queue/queue_list_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:get/get.dart'; // Import GetX
 import 'package:i_locket/views/queue/booking.dart';
 
 class DaftarAntrian extends StatefulWidget {
@@ -51,16 +50,14 @@ class _DaftarAntrian extends State<DaftarAntrian> {
     super.dispose();
   }
 
-  // ✅ Function untuk navigate ke halaman booking
+  // ✅ FIXED: Navigate using Get.to and passing arguments
   void _navigateToBooking(Map<String, dynamic> poli) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => QueueBookingScreen(
-          poliName: poli['name'],
-          poliDescription: poli['description'],
-        ),
-      ),
+    Get.to(
+      () => const QueueBookingScreen(), // No parameters here
+      arguments: {
+        'poliName': poli['name'],
+        'poliDescription': poli['description'],
+      },
     );
   }
 
@@ -85,7 +82,7 @@ class _DaftarAntrian extends State<DaftarAntrian> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Get.back(), // Use Get.back()
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -219,10 +216,10 @@ class _DaftarAntrian extends State<DaftarAntrian> {
     );
   }
 
-  // ✅ Widget untuk card poli dengan navigasi
+  // Widget untuk card poli dengan navigasi
   Widget _buildPoliCard(Map<String, dynamic> poli) {
     return InkWell(
-      onTap: () => _navigateToBooking(poli), // ✅ Navigate ke booking
+      onTap: () => _navigateToBooking(poli), // Navigate ke booking
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
@@ -239,7 +236,8 @@ class _DaftarAntrian extends State<DaftarAntrian> {
               Container(
                 decoration: BoxDecoration(
                   color: poli['color'],
-                  border: Border.all(color: const Color(0xffc6d4f1), width: 1),
+                  border:
+                      Border.all(color: const Color(0xffc6d4f1), width: 1),
                   borderRadius: BorderRadius.circular(99),
                 ),
                 padding: const EdgeInsets.symmetric(

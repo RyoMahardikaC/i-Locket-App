@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart'; // Wajib import ini untuk format tanggal
+import 'package:intl/intl.dart'; 
 import '../../routes/app_routes.dart';
 
 class RegistrationSuccessScreen extends StatelessWidget {
@@ -8,26 +8,25 @@ class RegistrationSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // --- 1. LOGIKA MENANGKAP DATA (Baru) ---
-    // Mengambil paket data yang dikirim dari BookingController
+    // --- 1. MENANGKAP DATA DARI BOOKING ---
     final args = Get.arguments as Map<String, dynamic>? ?? {};
 
-    // Menyiapkan variabel data (dengan nilai default jika error/kosong)
+    // Menyiapkan variabel data (dengan nilai default aman)
     final String doctorName = args['doctorName'] ?? "Dr. Stone";
-    // Jika poli tidak dikirim, kita pakai default atau string kosong
-    final String poliName = args['poliName'] ?? "Spesialis Telinga, Hidung, Tenggorokan"; 
+    final String poliName = args['poliName'] ?? "Spesialis THT";
     
+    // Handle Tanggal (Pastikan tidak null)
     final DateTime date = args['date'] ?? DateTime.now();
-    final TimeOfDay time = args['time'] ?? const TimeOfDay(hour: 0, minute: 0);
+    // Handle Waktu (Pastikan tidak null)
+    final TimeOfDay time = args['time'] ?? const TimeOfDay(hour: 09, minute: 00);
 
-    // Format Tanggal & Jam 
+    // Format Tanggal (Contoh: Tuesday, 12 Sep 2024)
     final String formattedDate = DateFormat('EEEE, d MMM yyyy').format(date);
     
-    // Format jam manual agar 2 digit (misal 09:05) atau pakai time.format(context)
+    // Format Jam Manual (Contoh: 09:05) agar selalu 2 digit
     final String formattedTime = "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
 
-
-    // --- 2. DEFINISI WARNA (Tetap) ---
+    // --- 2. DEFINISI WARNA ---
     const Color primaryBlue = Color(0xFF3F51B5);
     const Color cardBg = Color(0xFFD6D7F6); 
     const Color textDark = Color(0xFF1F2937);
@@ -42,7 +41,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
             children: [
               const Spacer(flex: 1),
               
-              // KARTU TIKET BESAR
+              // --- KARTU TIKET BESAR ---
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
@@ -83,16 +82,15 @@ class RegistrationSuccessScreen extends StatelessWidget {
                       ),
                       child: const CircleAvatar(
                         radius: 40,
-                        // Gambar dummy, nanti bisa diganti sesuai data dokter jika ada URL-nya
                         backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=11"), 
                         backgroundColor: Colors.grey,
                       ),
                     ),
                     const SizedBox(height: 16),
                     
-                    // --- NAMA DOKTER (Dinamis) ---
+                    // Nama Dokter (Dinamis)
                     Text(
-                      doctorName, // Menggunakan variabel dari arguments
+                      doctorName,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -102,7 +100,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     
-                    // --- SPESIALIS (Dinamis/Static) ---
+                    // Spesialis (Dinamis)
                     Text(
                       poliName,
                       textAlign: TextAlign.center,
@@ -114,10 +112,10 @@ class RegistrationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 40),
 
-                    // --- JADWAL LAYANAN (Dinamis) ---
+                    // Info Jadwal (Dinamis)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center, // Tambahkan ini agar di tengah
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.calendar_today_outlined, size: 28, color: primaryBlue),
                         const SizedBox(width: 12),
@@ -133,7 +131,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            // TAMPILKAN TANGGAL & JAM HASIL INPUT
+                            // Tampilkan Hasil Format Tanggal & Jam
                             Text(
                               "$formattedDate, $formattedTime",
                               style: const TextStyle(
@@ -153,12 +151,13 @@ class RegistrationSuccessScreen extends StatelessWidget {
 
               const Spacer(flex: 2),
 
-              // TOMBOL KEMBALI
+              // --- TOMBOL KEMBALI ---
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
+                    // Kembali ke halaman utama dan hapus history navigasi sebelumnya agar tidak numpuk
                     Get.offAllNamed(AppRoutes.home_screen);
                   },
                   style: ElevatedButton.styleFrom(
@@ -180,14 +179,19 @@ class RegistrationSuccessScreen extends StatelessWidget {
               
               const SizedBox(height: 16),
 
-              // TOMBOL CHECK-IN
+              // --- TOMBOL CHECK-IN ---
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
-                    Get.snackbar("Check-in", "Fitur Check-in akan membuka kamera Scanner");
-                    Get.toNamed(AppRoutes.scan_qr, arguments: Get.arguments);
+                    // Navigasi ke Scanner QR
+                    // PENTING: Kita teruskan arguments (data dokter/jam) ke halaman scanner
+                    // agar nanti bisa ditampilkan di halaman 'Status Antrian' setelah scan sukses.
+                    Get.toNamed(
+                      AppRoutes.scan_qr, 
+                      arguments: args // Meneruskan data yang diterima halaman ini
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryBlue,
