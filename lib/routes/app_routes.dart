@@ -9,4 +9,6 @@ class AppRoutes {
   static const status_antrian = '/status_antrian';
   static const scan_qr = '/scan_qr';
   static const status_antrian_checkin = '/status_antrian_checkin';
+  static const jadwal = '/jadwal';
+  static const riwayat = '/riwayat';
 }

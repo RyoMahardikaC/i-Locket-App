@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 import '../../routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Durasi animasi fade in
+    // 1. Setup Animasi Fade In
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -29,10 +29,26 @@ class _SplashScreenState extends State<SplashScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
     _controller.forward();
 
-    // Timer sebelum pindah ke Login (Total 3 detik)
-    Timer(const Duration(seconds: 3), () {
-      Get.offNamed(AppRoutes.login);
-    });
+    // 2. Jalankan Pengecekan Sesi Login
+    _checkSession();
+  }
+
+  // --- LOGIKA CEK SESI USER ---
+  Future<void> _checkSession() async {
+    // Tunggu durasi splash screen (3 detik) agar logo tampil & animasi selesai
+    await Future.delayed(const Duration(seconds: 3));
+
+    // Cek Session Supabase
+    // Apakah ada user yang sedang login?
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      // Jika SUDAH login -> Langsung ke Home Dashboard
+      Get.offAllNamed(AppRoutes.home_screen);
+    } else {
+      // Jika BELUM login -> Ke halaman Login
+      Get.offAllNamed(AppRoutes.login);
+    }
   }
 
   @override
@@ -57,12 +73,11 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo Stetoskop (Dari Asset Frame 46.png)
+                  // Logo Stetoskop
                   Image.asset(
-                    'assets/logo.png', // Pastikan nama file sudah diubah jadi logo.png
-                    width: 100, // Ukuran disesuaikan agar proporsional
+                    'assets/logo.png', 
+                    width: 100, 
                     height: 100,
-                    // color: Colors.white, // Aktifkan jika gambar aslinya hitam/berwarna lain
                   ),
                   
                   const SizedBox(height: 16),

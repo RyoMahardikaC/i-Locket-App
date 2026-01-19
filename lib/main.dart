@@ -1,3 +1,4 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'routes/app_routes.dart';
@@ -6,7 +7,7 @@ import './services/supabase_service.dart';
 
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
-
+    await initializeDateFormatting('id_ID', null);
   try {
     await Get.putAsync(() => SupabaseService().init());
     print('✅ Supabase berhasil diinisialisasi');
@@ -14,7 +15,7 @@ void main() async {
     print('❌ Supabase gagal diinisialisasi');
     print('Error: $e');
   }
-
+  
   runApp(const OnlineConsultantApp());
   
 }

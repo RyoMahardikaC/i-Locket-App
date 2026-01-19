@@ -8,38 +8,55 @@ class StatusAntrianCheckInScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. AMBIL DATA DARI ESTAFET ARGUMENTS
+    // =================================================================
+    // 1. LOGIC DATA (TETAP SAMA SEPERTI KODEMU)
+    // =================================================================
     final args = Get.arguments as Map<String, dynamic>? ?? {};
     
-    // Data Dinamis
+    final String doctorName = args['doctorName'] ?? 'Dokter Umum';
+    final String poliName = args['poliName'] ?? 'Poli Umum';
+    final String queueNumber = args['queueNumber'] ?? '-';
     final DateTime date = args['date'] ?? DateTime.now();
     final TimeOfDay time = args['time'] ?? const TimeOfDay(hour: 0, minute: 0);
 
-    // Format Tampilan
-    final String formattedDate = DateFormat('EEEE, d MMMM').format(date); // Contoh: Tuesday, 12 September
-    // Estimasi layanan: Waktu booking + 15 menit
+    // Format Tanggal (Pastikan locale sesuai konfigurasi main.dart kamu)
+    final String formattedDate = DateFormat('EEEE, d MMMM').format(date);
+    
+    // Format Jam
     final String startTime = "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
     final int endMinute = (time.minute + 15) % 60;
-    final int endHour = time.hour + ((time.minute + 15) ~/ 60);
+    final int addHour = (time.minute + 15) ~/ 60;
+    final int endHour = (time.hour + addHour) % 24;
     final String endTime = "${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}";
 
-    // Warna Desain
-    const Color primaryBlue = Color(0xFF3F51B5);
-    const Color bgPage = Color(0xFFE0E3F3); // Ungu muda background
+    // =================================================================
+    // 2. KONFIGURASI WARNA & UKURAN (SESUAI DESAIN)
+    // =================================================================
+    const Color headerBlue = Color(0xFF354498); // Biru Gelap (Header)
+    const Color bgLavender = Color(0xFFE2E6FA); // Ungu Muda (Background Bawah)
+    const Color primaryBlue = Color(0xFF354498); // Biru untuk Tombol & Progress
+    
+    // Ukuran area header biru di belakang
+    final double headerHeight = 220.0; 
+    // Jarak kartu putih dari atas layar
+    final double cardTopMargin = 160.0;
+    // Ukuran Kotak Icon
+    final double iconSize = 80.0;
 
     return Scaffold(
-      backgroundColor: bgPage,
+      backgroundColor: bgLavender, // Warna background bawah (sesuai desain)
+      extendBodyBehindAppBar: true, // Agar Appbar menyatu dengan header
       appBar: AppBar(
-        backgroundColor: primaryBlue,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-          onPressed: () => Get.offAllNamed(AppRoutes.home_screen), // Back langsung ke Home
+          onPressed: () => Get.offAllNamed(AppRoutes.home_screen),
         ),
         title: const Text(
           "Status Antrian",
           style: TextStyle(
-            color: Colors.white, 
+            color: Colors.white,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
           ),
@@ -49,166 +66,192 @@ class StatusAntrianCheckInScreen extends StatelessWidget {
       body: Stack(
         alignment: Alignment.topCenter,
         children: [
-          // Background Biru setengah (untuk menutupi gap header)
-          Container(
-            height: 100,
-            color: primaryBlue,
-          ),
-
-          // CARD UTAMA
-          Container(
-            margin: const EdgeInsets.only(top: 40, left: 24, right: 24, bottom: 24),
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 24), // Padding atas besar untuk icon
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // Agar card menyesuaikan isi
-              children: [
-                const Text(
-                  "Check-in Berhasil",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Puskesmas Pakis Kembar",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // NOMOR ANTRIAN
-                const Text(
-                  "Nomor Antrian",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Poppins'),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  "A-12", // Bisa dibuat random/dinamis jika mau
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // LINGKARAN PROGRESS (Sisa Antrian)
-                SizedBox(
-                  height: 120,
-                  width: 120,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CircularProgressIndicator(
-                        value: 0.7, // 70% Progress dummy
-                        strokeWidth: 8,
-                        backgroundColor: Colors.grey.shade200,
-                        valueColor: const AlwaysStoppedAnimation<Color>(primaryBlue),
-                      ),
-                      const Center(
-                        child: Text(
-                          "5", // Dummy sisa antrian
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 40),
-
-                // ESTIMASI WAKTU (Dinamis)
-                Text(
-                  "Estimasi layanan $startTime - $endTime",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1F2937),
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  formattedDate, // Tanggal dinamis
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1F2937),
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // TOMBOL KEMBALI
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.offAllNamed(AppRoutes.home_screen);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryBlue,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Kembali ke Beranda",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ICON STACK DI ATAS (Floating)
+          // LAYER 1: HEADER BIRU TUA (Background Atas)
           Positioned(
             top: 0,
+            left: 0,
+            right: 0,
+            height: headerHeight,
+            child: Container(color: headerBlue),
+          ),
+
+          // LAYER 2: KARTU PUTIH UTAMA
+          Container(
+            margin: EdgeInsets.only(top: cardTopMargin),
+            height: double.infinity, // Memenuhi sisa layar ke bawah
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24), // Padding atas 60 agar tidak nabrak icon
+              child: Column(
+                children: [
+                  // --- KONTEN DALAM KARTU ---
+                  
+                  // Judul & Nama Faskes
+                  const Text(
+                    "Check-in Berhasil",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Puskesmas Pakis Kembar", // Bisa diganti dinamis jika ada datanya
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: const Color.fromARGB(255, 31, 31, 31),
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Label Nomor Antrian
+                  Text(
+                    "Nomor Antrian",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: const Color.fromARGB(255, 31, 31, 31),
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // ANGKA NOMOR ANTRIAN (DINAMIS)
+                  Text(
+                    queueNumber,
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // Hitam pekat sesuai desain
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // LINGKARAN PROGRESS (Sesuai Desain)
+                  SizedBox(
+                    height: 140,
+                    width: 140,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Lingkaran Abu (Background Full)
+                        CircularProgressIndicator(
+                          value: 1.0,
+                          strokeWidth: 12,
+                          valueColor: AlwaysStoppedAnimation<Color>(const Color.fromARGB(255, 155, 155, 155)),
+                        ),
+                        // Lingkaran Biru (Progress sebagian)
+                        const CircularProgressIndicator(
+                          value: 0.3, // Statis 30% sesuai gambar desain
+                          strokeWidth: 12,
+                          valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+                          strokeCap: StrokeCap.round,
+                        ),
+                        // Angka di Tengah (Sisa Antrian)
+                        Center(
+                          child: Text(
+                            "5", // Bisa diganti logic sisa antrian jika ada
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(), // Dorong konten ke bawah
+
+                  // ESTIMASI LAYANAN (DINAMIS)
+                  Text(
+                    "Estimasi layanan $startTime - $endTime",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade800,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: const Color.fromARGB(255, 31, 31, 31),
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // TOMBOL KEMBALI (Full Width, Biru)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryBlue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Get.offAllNamed(AppRoutes.home_screen);
+                      },
+                      child: const Text(
+                        'Kembali ke Beranda',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // LAYER 3: ICON MENGAMBANG (FLOATING ICON)
+          // Posisinya diatur agar berada di tengah-tengah perbatasan Header & Card
+          Positioned(
+            top: cardTopMargin - (iconSize / 2), // Setengah icon di atas garis
             child: Container(
-              height: 80,
-              width: 80,
+              height: iconSize,
+              width: iconSize,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
-                  )
+                  ),
                 ],
               ),
               child: const Center(
-                // Menggunakan Icon tumpuk (Layers) sesuai gambar
-                child: Icon(Icons.layers, size: 40, color: Color(0xFF0D1C52)),
+                child: Icon(
+                  Icons.layers_outlined, // Icon tumpukan
+                  size: 40,
+                  color: primaryBlue,
+                ),
               ),
             ),
           ),

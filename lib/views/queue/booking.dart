@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart'; 
-import 'package:supabase_flutter/supabase_flutter.dart'; // Pastikan import ini ada
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../routes/app_routes.dart';
 
 // --- 1. CONTROLLER (State Management) ---
@@ -10,7 +10,7 @@ class BookingController extends GetxController {
   final supabase = Supabase.instance.client; 
 
   // Variables (Observables)
-  // List Dokter sekarang menampung Map (Object data dokter lengkap dari DB)
+  // List Dokter sekarang menampung Map (Object data dokter dari DB)
   var doctors = <Map<String, dynamic>>[].obs;
   var isLoadingDoctors = true.obs;
 
@@ -74,68 +74,67 @@ class BookingController extends GetxController {
     }
   }
 
-  // --- FUNGSI SUBMIT KE DATABASE ---
-  Future<void> submitBooking() async {
-    // 1. Validasi Input
+// --- FUNGSI SUBMIT KE DATABASE ---
+Future<void> submitBooking() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      Get.snackbar("Error", "Sesi habis. Silakan login ulang.");
+      Get.offAllNamed(AppRoutes.login);
+      return;
+    }
+
     if (selectedDoctor.value == null || selectedTime.value == null) {
       Get.snackbar(
-        "Data Belum Lengkap", 
+        "Data Belum Lengkap",
         "Mohon pilih dokter dan waktu layanan",
-        backgroundColor: Colors.redAccent, 
+        backgroundColor: Colors.redAccent,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(20),
       );
       return;
     }
 
     try {
-      // 2. Tampilkan Loading (Opsional, bisa pakai Get.dialog loading)
-      // Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
-
-      // 3. Persiapkan Data untuk Database
-      // Format Tanggal (YYYY-MM-DD) dan Jam (HH:MM:SS) untuk PostgreSQL
       String dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value);
       String timeStr = "${selectedTime.value!.hour.toString().padLeft(2, '0')}:${selectedTime.value!.minute.toString().padLeft(2, '0')}:00";
       
-      // Generate Nomor Antrian Dummy (Di real app bisa pakai logic sequence DB)
-      String queueCode = "A-${DateTime.now().second}${DateTime.now().millisecond}"; 
+      String queueCode = "A-${DateTime.now().second}${DateTime.now().millisecond}";
 
-      // 4. Insert ke Tabel 'queues'
       await supabase.from('queues').insert({
-        'doctor_id': selectedDoctor.value!['id'], // Ambil ID dari object dokter yang dipilih
-        'patient_name': 'Johan (User)', // Nanti diganti user login session
-        'booking_date': dateStr,
+        'user_id': user.id,
+        'doctor_id': selectedDoctor.value!['id'],
+        'patient_name': user.userMetadata?['full_name'] ?? 'Pasien Tanpa Nama',
+        'booking_date': dateStr, 
         'booking_time': timeStr,
         'complaint': complaintController.text,
         'queue_number': queueCode,
+        'status': 'Menunggu',
+        'is_check_in': false,
       });
 
-      // Tutup loading jika ada
-      // if (Get.isDialogOpen == true) Get.back();
-
-      // 5. Navigasi ke Halaman Sukses dengan Data
       Get.toNamed(
-        AppRoutes.antrian, 
+        AppRoutes.antrian,
         arguments: {
           'doctorName': selectedDoctor.value!['name'],
           'poliName': selectedDoctor.value!['specialist'],
+          'doctorImage': selectedDoctor.value!['image_url'],
           'date': selectedDate.value,
           'time': selectedTime.value,
-        }
+          'queueNumber': queueCode,
+        },
       );
 
     } catch (e) {
-      // if (Get.isDialogOpen == true) Get.back();
+      print("ERROR DETAIL: $e"); // Cek console kalau masih error
       Get.snackbar(
-        "Gagal Booking", 
+        "Gagal Booking",
         "Terjadi kesalahan: $e",
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
     }
   }
-  
   @override
   void onClose() {
     complaintController.dispose();
