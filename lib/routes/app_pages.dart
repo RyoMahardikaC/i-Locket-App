@@ -9,6 +9,8 @@ import '../views/queue/antrian.dart';
 import '../views/queue/status_antrian.dart';
 import '../views/queue/scan_qr.dart';
 import '../views/queue/status_antrian_checkin.dart';
+import '../views/schedule/jadwal_dokter.dart';
+import '../views/history/riwayat_kunjungan_screen.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -53,5 +55,14 @@ class AppPages {
     name: AppRoutes.status_antrian_checkin,
     page: () => const StatusAntrianCheckInScreen(),
     ),
+    GetPage(
+    name: AppRoutes.jadwal,
+    page: () => const JadwalDokterScreen(),
+),
+    GetPage(
+    name: AppRoutes.riwayat,
+    page: () => const RiwayatKunjunganScreen(),
+),
+  
   ];
 }

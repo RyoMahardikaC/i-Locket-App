@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../routes/app_routes.dart';
+// Import AuthController
+import '../../controllers/auth_controller.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +21,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _repeatPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  // Panggil Controller (Gunakan Get.find jika sudah di-put di login, atau Get.put jika belum)
+  final authC = Get.put(AuthController());
+
   // State Variables
   bool _obscurePassword = true;
   bool _obscureRepeatPassword = true;
@@ -34,50 +39,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // --- LOGIKA REGISTER ---
+  // --- LOGIKA REGISTER (UPDATED) ---
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
-      // 1. Tampilkan Snackbar Sukses
-      Get.snackbar(
-        "Berhasil",
-        "Akun berhasil dibuat! Silakan login.",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        icon: const Icon(Icons.check_circle, color: Colors.white),
-        margin: const EdgeInsets.all(10),
-        borderRadius: 10,
-        duration: const Duration(seconds: 2),
-      );
+      // Gabungkan kode negara dan nomor telepon
+      String fullPhoneNumber = '$_selectedCountryCode${_phoneController.text}';
 
-      // 2. Navigasi ke Login atau Home
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        // Biasanya setelah register sukses, user diarahkan login atau langsung home
-        // Disini kita arahkan ke Home agar flow-nya lancar
-        Get.offAllNamed(AppRoutes.home_screen);
-      });
-    } else {
-      Get.snackbar(
-        "Gagal",
-        "Mohon lengkapi formulir dengan benar",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        icon: const Icon(Icons.error, color: Colors.white),
-        margin: const EdgeInsets.all(10),
-        borderRadius: 10,
+      // Panggil fungsi register dari AuthController
+      // Data Nama dan HP akan dikirim sebagai metadata ke Supabase
+      authC.register(
+        _emailController.text,
+        _passwordController.text,
+        _fullNameController.text,
+        fullPhoneNumber,
       );
     }
   }
 
-  // --- NAVIGASI KE LOGIN ---
   void _navigateToLogin() {
     Get.back(); // Kembali ke halaman Login
   }
 
   @override
   Widget build(BuildContext context) {
-    // Definisi Warna Konsisten
     const Color primaryBlue = Color(0xFF3F51B5);
     const Color textDark = Color(0xFF1F2937);
     const Color textGrey = Color(0xFF6B7280);
@@ -85,13 +69,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: primaryBlue,
       body: SafeArea(
-        bottom: false, // Agar container putih mentok ke bawah
+        bottom: false,
         child: Column(
           children: [
-            // Header Space (Biru di atas)
             const SizedBox(height: 40),
-            
-            // Container Putih
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -109,32 +90,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title
                         const Text(
                           'Register',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: textDark,
-                            fontFamily: 'Poppins',
-                          ),
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textDark, fontFamily: 'Poppins'),
                         ),
                         const SizedBox(height: 8),
-
-                        // Subtitle
                         const Text(
                           'Please Register Before Login',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: textGrey,
-                            fontFamily: 'Poppins',
-                          ),
+                          style: TextStyle(fontSize: 14, color: textGrey, fontFamily: 'Poppins'),
                         ),
                         const SizedBox(height: 30),
 
-                        // ==============================
                         // FULL NAME
-                        // ==============================
                         const Text('Full Name*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -144,9 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // ==============================
                         // EMAIL
-                        // ==============================
                         const Text('Email*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -161,17 +126,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // ==============================
                         // PASSWORD
-                        // ==============================
                         const Text('Password*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: _buildInputDecoration(
-                            "Password", 
-                            Icons.lock_outline, 
+                            "Password", Icons.lock_outline, 
                             iconColor: primaryBlue,
                             suffixIcon: IconButton(
                               icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
@@ -182,17 +144,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // ==============================
                         // REPEAT PASSWORD
-                        // ==============================
                         const Text('Repeat Password*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _repeatPasswordController,
                           obscureText: _obscureRepeatPassword,
                           decoration: _buildInputDecoration(
-                            "Repeat Password", 
-                            Icons.lock_outline, 
+                            "Repeat Password", Icons.lock_outline, 
                             iconColor: primaryBlue,
                             suffixIcon: IconButton(
                               icon: Icon(_obscureRepeatPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
@@ -206,9 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // ==============================
-                        // PHONE INPUT (Custom Style)
-                        // ==============================
+                        // PHONE INPUT
                         const Text('Phone Input*', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins')),
                         const SizedBox(height: 8),
                         TextFormField(
@@ -219,96 +176,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintStyle: const TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
                             filled: true,
                             fillColor: Colors.white,
-                            // Custom Prefix untuk Bendera & Kode Negara
                             prefixIcon: Container(
-                              width: 100, // Lebar area prefix
+                              width: 100,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Row(
                                 children: [
-                                  // Bendera Dummy (Merah Putih - Indonesia)
                                   Container(
-                                    width: 24,
-                                    height: 16,
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(2),
-                                      border: Border.all(color: Colors.grey.shade300)
-                                    ),
+                                    width: 24, height: 16,
+                                    decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(2), border: Border.all(color: Colors.grey.shade300)),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    _selectedCountryCode,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: textDark),
-                                  ),
+                                  Text(_selectedCountryCode, style: const TextStyle(fontWeight: FontWeight.bold, color: textDark)),
                                   const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
                                 ],
                               ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: primaryBlue, width: 2),
-                            ),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryBlue, width: 2)),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             contentPadding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           validator: (val) => (val == null || val.isEmpty) ? 'Wajib diisi' : null,
                         ),
-                        
                         const SizedBox(height: 32),
 
-                        // ==============================
-                        // BUTTON REGISTER
-                        // ==============================
+                        // REGISTER BUTTON (UPDATED WITH OBX & LOADING)
                         SizedBox(
                           width: double.infinity,
                           height: 52,
-                          child: ElevatedButton(
-                            onPressed: _handleRegister,
+                          child: Obx(() => ElevatedButton(
+                            onPressed: authC.isLoading.value ? null : _handleRegister,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryBlue,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text(
-                              'Register',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ),
+                            child: authC.isLoading.value
+                                ? const SizedBox(
+                                    height: 24, width: 24,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                                  )
+                                : const Text(
+                                    'Register',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+                                  ),
+                          )),
                         ),
                         const SizedBox(height: 24),
 
-                        // ==============================
                         // LOGIN LINK
-                        // ==============================
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              "Have an account? ",
-                              style: TextStyle(fontSize: 14, color: textDark, fontFamily: 'Poppins'),
-                            ),
+                            Text("Have an account? ", style: TextStyle(fontSize: 14, color: textDark, fontFamily: 'Poppins')),
                             GestureDetector(
                               onTap: _navigateToLogin,
-                              child: const Text(
-                                'Login Here',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: primaryBlue,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
+                              child: const Text('Login Here', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primaryBlue, fontFamily: 'Poppins')),
                             ),
                           ],
                         ),
@@ -325,7 +249,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Helper Widget untuk Style Input Field agar Rapi & Konsisten
   InputDecoration _buildInputDecoration(String hint, IconData? icon, {Color? iconColor, Widget? suffixIcon}) {
     return InputDecoration(
       hintText: hint,
@@ -335,17 +258,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF3F51B5), width: 2), // Primary Blue
-      ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3F51B5), width: 2)),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }

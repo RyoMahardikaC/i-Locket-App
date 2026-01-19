@@ -50,10 +50,10 @@ class _DaftarAntrian extends State<DaftarAntrian> {
     super.dispose();
   }
 
-  // ✅ FIXED: Navigate using Get.to and passing arguments
+  //Navigate using Get.to and passing arguments
   void _navigateToBooking(Map<String, dynamic> poli) {
     Get.to(
-      () => const QueueBookingScreen(), // No parameters here
+      () => const QueueBookingScreen(), 
       arguments: {
         'poliName': poli['name'],
         'poliDescription': poli['description'],
